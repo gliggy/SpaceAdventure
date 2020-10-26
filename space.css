@@ -1,0 +1,17 @@
+body
+{
+  overflow:hidden;
+  height: 100vh;
+  color: red;
+}
+
+html, body, canvas {
+  margin: 0;
+  padding: 0;
+}
+
+canvas {
+  background-image: url(https://static.tumblr.com/072fc6f852c105e89de977ec0944701c/lfty71d/9CFouzuqp/tumblr_static_tumblr_static__640.gif);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
