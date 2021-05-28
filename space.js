@@ -28,7 +28,6 @@ var game_state = "start";
 //begin game code
 
 //game_state logic
-if (game_state == "hit") {game_state = "retrying"};
 
 function Asteroid (asteroid_src) {
     this.x = 0;
@@ -58,6 +57,7 @@ function Ship (img_url) {
   this.MyImg.src = img_url ;
 }
 
+//collision detection
 function ImagesTouching(x1, y1, img1, x2, y2, img2) {
   if (x1 >= x2+img2.width || x1+img1.width <= x2) return false;   // too far to the side
   if (y1 >= y2+img2.height || y1+img1.height <= y2) return false; // too far above/below
@@ -66,16 +66,12 @@ function ImagesTouching(x1, y1, img1, x2, y2, img2) {
 
 Ship.prototype.Do_Frame_Things = function() {
   if (this.visible) ctx.drawImage(this.MyImg, this.x, this.y, this.width, this.height);  // draw the thing
-
   // if the x-velocity is to the left, only apply the velocity if the sprite is not off-screen to the left<
   if ((this.velocity_x < 0) && (this.x > 0))  this.x = this.x + this.velocity_x;
-
   // if the x-velocity is to the right, only apply the velocity if the sprite is not off-screen to the right<
   if ((this.velocity_x > 0) && (this.x + this.width < myCanvas.width )) this.x = this.x + this.velocity_x;
-
   // if the y-velocity is upward, only apply the velocity if the sprite is not off-screen at the top
   if ((this.velocity_y < 0) && (this.y > 0))  this.y = this.y + this.velocity_y;
-
   // if the y-velocity is downward, only apply the velocity if the sprite is not off-screen at the bottom
   if ((this.velocity_y > 0) && (this.y + this.height< myCanvas.height)) this.y = this.y + this.velocity_y; // move the thing
 }
@@ -96,6 +92,9 @@ var thing = new Asteroid("asteroid.png");
  //console.log(thing.width);
  thing.x = myCanvas.width/2 - thing.width/2;
  thing.y = myCanvas.height/2 - thing.height/2;
+
+ console.log(spaceShip.x, spaceShip.y, thing.x, thing.y);
+
 
 //message section, should probably be refactored into something
 function ShowGameMessage(message, color, exit_key, action) {
@@ -123,18 +122,21 @@ function endGame() {
   ShowGameMessage("You used all five tries.", "red", "space", "restart the game");
   game_state = "ended";
   tries = 0;
+  score = 0;
 }
 //end message section
 
 //this monstrosity...
 function Do_a_Frame () {
-  console.log(game_state);
-
+  //console.log(game_state);
+  var touching = ImagesTouching(spaceShip.x, spaceShip.y, spaceShip, thing.x, thing.y, thing);
+  //console.log(touching);
+  if (touching) {game_state = "hit"}
   //game_state logic
   if (game_state == "hit") {game_state = "retrying"};
 
   if (game_state == "start") startGame();
-  else if (game_state == "retrying" && tries > 5) endGame();
+  else if (game_state == "playing" && tries >= 5 || game_state == "ended") endGame();
   else if (game_state == "retrying") ShowGameMessage("You died!", "red", "R", "try again");
   else {
     thing.velocity_x = Math.cos(thing.direction) * thing.width / 10;
@@ -161,14 +163,14 @@ function Do_a_Frame () {
 
 //why is it here at the end?!
 function retry_game() {
-    // This gets called when the 'r' key is pressed and just sets
-    // some important variables back to the start.
-    //
-    // Alternatively they could just reload the page
-    //score = 0;
-    game_state = "playing";
-    tries += 1;
-    }
+  thing.width = 15;
+  thing.height = 15;
+  thing.x = myCanvas.width/2 - thing.width/2;
+   thing.y = myCanvas.height/2 - thing.height/2;
+   thing.direction = Math.random() * 2 * Math.PI;
+  game_state = "playing";
+  tries += 1;
+}
 
 //begin key handling
 function MyKeyUpHandler (MyEvent) {
@@ -184,7 +186,7 @@ function MyKeyDownHandler (MyEvent) {
 
   if (MyEvent.keyCode == 82 && game_state == "retrying") {retry_game();} // r to retry
   if (MyEvent.keyCode == 77 && !theme_playing) playTheme();  // m for audio
-  if (MyEvent.keyCode == 32 && game_state == "start") { game_state = "playing" }  // Space to start
+  if (MyEvent.keyCode == 32 && game_state == "start" || game_state == "ended") { game_state = "playing" }  // Space to start
 
   MyEvent.preventDefault()
   }
