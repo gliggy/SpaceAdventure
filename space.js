@@ -19,13 +19,17 @@ function playTheme () {
 
 //begin game variables
 var score = 0;
-var game_on = false;
-var game_started = false;
+//var game_on = false;
+//var game_started = false;
 var tries = 0;
 var velocity = 8;
 var game_state = "start";
 
 //begin game code
+
+//game_state logic
+if (game_state == "hit") {game_state = "retrying"};
+
 function Asteroid (asteroid_src) {
     this.x = 0;
     this.y = 0;
@@ -117,17 +121,21 @@ function startGame() {
 	}
 function endGame() {
   ShowGameMessage("You used all five tries.", "red", "space", "restart the game");
-  game_started = false;
-  game_on = false;
+  game_state = "ended";
   tries = 0;
 }
 //end message section
 
 //this monstrosity...
 function Do_a_Frame () {
-  if (!game_on && !game_started && tries <= 5) startGame();
-  else if (!game_on && tries > 5) endGame();
-  else if (!game_on) ShowGameMessage("You died!", "red", "R", "try again");
+  console.log(game_state);
+
+  //game_state logic
+  if (game_state == "hit") {game_state = "retrying"};
+
+  if (game_state == "start") startGame();
+  else if (game_state == "retrying" && tries > 5) endGame();
+  else if (game_state == "retrying") ShowGameMessage("You died!", "red", "R", "try again");
   else {
     thing.velocity_x = Math.cos(thing.direction) * thing.width / 10;
       thing.velocity_y = Math.sin(thing.direction) * thing.height / 10;
@@ -153,12 +161,12 @@ function Do_a_Frame () {
 
 //why is it here at the end?!
 function retry_game() {
-    // This gets called when the 'S' key is pressed and just sets
+    // This gets called when the 'r' key is pressed and just sets
     // some important variables back to the start.
     //
     // Alternatively they could just reload the page
-    score = 0;
-    game_on = true;
+    //score = 0;
+    game_state = "playing";
     tries += 1;
     }
 
@@ -174,9 +182,9 @@ function MyKeyDownHandler (MyEvent) {
   if (MyEvent.keyCode == 39) {spaceShip.velocity_x =  velocity};  // right
   if (MyEvent.keyCode == 40) {spaceShip.velocity_y =  velocity};  // down
 
-  if (MyEvent.keyCode == 82 && !game_on) retry_game();  // r to retry
+  if (MyEvent.keyCode == 82 && game_state == "retrying") {retry_game();} // r to retry
   if (MyEvent.keyCode == 77 && !theme_playing) playTheme();  // m for audio
-  if (MyEvent.keyCode == 32 && !game_started) { game_started = true; game_on = true; }  // Space to start
+  if (MyEvent.keyCode == 32 && game_state == "start") { game_state = "playing" }  // Space to start
 
   MyEvent.preventDefault()
   }
